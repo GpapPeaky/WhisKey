@@ -4,6 +4,14 @@ use std::time::Instant;      // Timers for enter and backspace when is_key_down(
 mod editor;
 use editor::Editor; // Import the struct
 
+// TODO: Add file handling system
+// TODO: Add basic highlighting
+// TODO: Add more colours!
+// TODO: Add instant cursor movement with Ctrl
+// TODO: Add timers to all key presses
+// TODO: Add an idle and editing state to the cursor
+
+
 #[macroquad::main("whiskey")]
 async fn main() {
     set_fullscreen(true); // Window is now fullscreen
@@ -84,7 +92,6 @@ async fn main() {
             backspace_held = false;
         }
         
-        // TODO: Add timers here
         // Handle the cursor movement
         if is_key_pressed(KeyCode::Up) {
             editor.move_cursor(KeyCode::Up);
