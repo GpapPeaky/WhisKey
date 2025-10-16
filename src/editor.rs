@@ -2,6 +2,7 @@ use macroquad::input::KeyCode;
 
 // Basic editor struct
 pub struct Editor{
+    pub scope: i32,        // Current scope
     pub text: Vec<String>, // File text string
     pub cursor_x: usize,   // Current cursor position x
     pub cursor_y: usize    // Current cursor position y
@@ -14,6 +15,7 @@ impl Editor {
     // Constructor
     pub fn new() -> Self {
         Self {
+            scope: 0,
             text: vec![String::new()],
             cursor_x: 0,
             cursor_y: 0
@@ -23,7 +25,7 @@ impl Editor {
     // Insert a character via keypress
     pub fn insert_char(&mut self, c: char) {
         if let Some(line) = self.text.get_mut(self.cursor_y) {
-            let special_char = Self::special_char_insertion(c, line, &mut self.cursor_x);
+            let special_char = Self::special_char_insertion(c, line, &mut self.cursor_x, &mut self.scope);
             
             if !special_char {
                 line.insert(self.cursor_x, c);
@@ -49,33 +51,24 @@ impl Editor {
 
     // Enter a new line
     pub fn new_line(&mut self) {
-        // compute indentation from current line
-        let indentation: String = {
-            let current_line = &self.text[self.cursor_y]; // immutable borrow
-            current_line.chars()
-                .take_while(|c| c.is_whitespace())
-                .collect()
-        }; // immutable borrow ends here
-    
-        // get mutable reference to current line
+        // Get mutable reference to the current line
         let current_line = &mut self.text[self.cursor_y];
     
-        // split off rest of the line at cursor_x
+        // Split the current line at the cursor
         let rest = current_line.split_off(self.cursor_x);
     
-        // update cursor
+        // Move cursor to start of new line
         self.cursor_y += 1;
-        self.cursor_x = indentation.len();
+        self.cursor_x = 0;
     
-        // insert new line with indentation + rest
-        self.text.insert(self.cursor_y, indentation + &rest);
+        // Insert a new line with the rest of the text
+        self.text.insert(self.cursor_y, rest);
     }
-    
-    
+
     // Check for special character insertions
     // like when pressing '(' it creates another ')'
     // or the tab -> <3 spaces>
-    pub fn special_char_insertion(c: char, line: &mut String, cursor_x: &mut usize) -> bool {
+    pub fn special_char_insertion(c: char, line: &mut String, cursor_x: &mut usize, scope: &mut i32) -> bool {
         if c == '(' {
             line.insert(*cursor_x, c);
             line.insert(*(cursor_x) + 1, ')');
@@ -97,6 +90,8 @@ impl Editor {
         if c == '{' {
             line.insert(*cursor_x, c);
             line.insert(*(cursor_x) + 1, '}');
+
+            *scope += 1;
 
             *cursor_x += 1;
 
@@ -120,6 +115,14 @@ impl Editor {
 
             return true;
         }
+
+        // Reduce the scope when terminating a block
+        if c == '}' {
+            line.insert(*cursor_x, c);
+            *scope = (*scope - 1).max(0);
+            return true;
+        }
+        
 
         false
     }
