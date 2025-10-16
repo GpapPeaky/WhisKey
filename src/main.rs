@@ -19,7 +19,7 @@ async fn main() {
     let mut backspace_held = false;
     
     // Timer parameters
-    let repeat_delay = 0.1;   // seconds before repeat starts
+    let repeat_delay = 0.2;   // seconds before repeat starts
     let repeat_rate = 0.05;   // seconds per repeat after that
 
     // Cursor blink
@@ -84,6 +84,7 @@ async fn main() {
             backspace_held = false;
         }
         
+        // TODO: Add timers here
         // Handle the cursor movement
         if is_key_pressed(KeyCode::Up) {
             editor.move_cursor(KeyCode::Up);
@@ -148,7 +149,7 @@ async fn main() {
             let cursor_x = 65.0
                 + measure_text(&editor.text[editor.cursor_y][..editor.cursor_x], Some(&font), font_size, 1.0).width + 5.0;
             let cursor_y = 25.0 + editor.cursor_y as f32 * font_size as f32;
-            draw_rectangle(cursor_x, cursor_y - font_size as f32, font_size as f32 / 1.5, font_size as f32, WHITE);
+            draw_rectangle(cursor_x, cursor_y - font_size as f32, font_size as f32 / 6.0, font_size as f32, WHITE);
         }
 
         next_frame().await;

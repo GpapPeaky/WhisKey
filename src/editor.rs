@@ -1,7 +1,8 @@
-use macroquad::input::KeyCode;
+use macroquad::{input::KeyCode, text};
 
 // Basic editor struct
 pub struct Editor{
+    pub scope: i32,        // Current scope
     pub text: Vec<String>, // File text string
     pub cursor_x: usize,   // Current cursor position x
     pub cursor_y: usize    // Current cursor position y
@@ -14,6 +15,7 @@ impl Editor {
     // Constructor
     pub fn new() -> Self {
         Self {
+            scope: 0,
             text: vec![String::new()],
             cursor_x: 0,
             cursor_y: 0
@@ -33,19 +35,43 @@ impl Editor {
     }
 
     // Delete the previous character
-    pub fn backspace(&mut self) {
-        if self.cursor_x > 0 {
-            if let Some(line) = self.text.get_mut(self.cursor_y) {
+   pub fn backspace(&mut self) {
+    if self.cursor_x > 0 {
+        let mut tab_check = false;
+
+        // Short immutable borrow
+        if self.cursor_x >= TAB_SIZE {
+            if let Some(line) = self.text.get(self.cursor_y) {
+                let start = self.cursor_x - TAB_SIZE;
+                let end = self.cursor_x;
+                tab_check = line.get(start..end) == Some("    "); // 4 spaces
+            }
+        }
+
+        // Mutable borrow starts after immutable borrow ends
+        if let Some(line) = self.text.get_mut(self.cursor_y) {
+            if tab_check {
+                let start = self.cursor_x - TAB_SIZE;
+                let end = self.cursor_x;
+                if start < end && end <= line.len() {
+                    line.drain(start..end); // safely remove that slice
+                    self.cursor_x -= TAB_SIZE;
+                }
+            } else if self.cursor_x > 0 && self.cursor_x <= line.len() {
                 line.remove(self.cursor_x - 1);
                 self.cursor_x -= 1;
             }
-        } else if self.cursor_y > 0 {
-            let removed_line = self.text.remove(self.cursor_y);
-            self.cursor_y -= 1;
-            self.cursor_x = self.text[self.cursor_y].len();
-            self.text[self.cursor_y].push_str(&removed_line);
+        }
+    } else if self.cursor_y > 0 {
+        // merge with previous line
+        let removed_line = self.text.remove(self.cursor_y);
+        self.cursor_y -= 1;
+        if let Some(prev_line) = self.text.get_mut(self.cursor_y) {
+            self.cursor_x = prev_line.len();
+            prev_line.push_str(&removed_line);
         }
     }
+}
 
     // Enter a new line
     pub fn new_line(&mut self) {
@@ -70,6 +96,8 @@ impl Editor {
         if c == '(' {
             line.insert(*cursor_x, c);
             line.insert(*(cursor_x) + 1, ')');
+
+            *cursor_x += 1;
 
             return true;
         }
