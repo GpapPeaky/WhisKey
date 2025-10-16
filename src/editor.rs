@@ -7,6 +7,8 @@ pub struct Editor{
     pub cursor_y: usize    // Current cursor position y
 }
 
+const TAB_SIZE: usize = 4;
+
 impl Editor {
     
     // Constructor
@@ -21,9 +23,12 @@ impl Editor {
     // Insert a character via keypress
     pub fn insert_char(&mut self, c: char) {
         if let Some(line) = self.text.get_mut(self.cursor_y) {
-            line.insert(self.cursor_x, c);
-
-            self.cursor_x += 1;
+            let special_char = Self::special_char_insertion(c, line, &mut self.cursor_x);
+            
+            if !special_char {
+                line.insert(self.cursor_x, c);
+                self.cursor_x += 1;
+            }
         }
     }
 
@@ -34,7 +39,7 @@ impl Editor {
                 line.remove(self.cursor_x - 1);
                 self.cursor_x -= 1;
             }
-        }else if self.cursor_y > 0 {
+        } else if self.cursor_y > 0 {
             let removed_line = self.text.remove(self.cursor_y);
             self.cursor_y -= 1;
             self.cursor_x = self.text[self.cursor_y].len();
@@ -44,10 +49,91 @@ impl Editor {
 
     // Enter a new line
     pub fn new_line(&mut self) {
-        let rest = self.text[self.cursor_y].split_off(self.cursor_x);
+        // compute indentation from current line
+        let indentation: String = {
+            let current_line = &self.text[self.cursor_y]; // immutable borrow
+            current_line.chars()
+                .take_while(|c| c.is_whitespace())
+                .collect()
+        }; // immutable borrow ends here
+    
+        // get mutable reference to current line
+        let current_line = &mut self.text[self.cursor_y];
+    
+        // split off rest of the line at cursor_x
+        let rest = current_line.split_off(self.cursor_x);
+    
+        // update cursor
         self.cursor_y += 1;
-        self.cursor_x = 0;
-        self.text.insert(self.cursor_y, rest);
+        self.cursor_x = indentation.len();
+    
+        // insert new line with indentation + rest
+        self.text.insert(self.cursor_y, indentation + &rest);
+    }
+    
+    
+    // Check for special character insertions
+    // like when pressing '(' it creates another ')'
+    // or the tab -> <3 spaces>
+    pub fn special_char_insertion(c: char, line: &mut String, cursor_x: &mut usize) -> bool {
+        if c == '(' {
+            line.insert(*cursor_x, c);
+            line.insert(*(cursor_x) + 1, ')');
+
+            *cursor_x += 1;
+
+            return true;
+        }
+
+        if c == '[' {
+            line.insert(*cursor_x, c);
+            line.insert(*(cursor_x) + 1, ']');
+
+            *cursor_x += 1;
+
+            return true;
+        }
+
+        if c == '{' {
+            line.insert(*cursor_x, c);
+            line.insert(*(cursor_x) + 1, '}');
+
+            *cursor_x += 1;
+
+            return true;
+        }
+
+        if c == '"' {
+            line.insert(*cursor_x, c);
+            line.insert(*(cursor_x) + 1, '"');
+
+            *cursor_x += 1;
+
+            return true;
+        }
+
+        if c == '\'' {
+            line.insert(*cursor_x, c);
+            line.insert(*(cursor_x) + 1, '\'');
+
+            *cursor_x += 1;
+
+            return true;
+        }
+
+        false
+    }
+
+    // Tab insertion
+
+    pub fn insert_tab(&mut self) {
+        if let Some(line) = self.text.get_mut(self.cursor_y) {
+            for i in 0..TAB_SIZE {
+                line.insert(self.cursor_x + i, ' ');
+            }
+
+            self.cursor_x += TAB_SIZE;
+        }
     }
 
     // Move the cursor

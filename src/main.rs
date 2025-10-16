@@ -40,6 +40,11 @@ async fn main() {
             }
         }
 
+        // Tab key
+        if is_key_pressed(KeyCode::Tab) {
+            editor.insert_tab();
+        }
+
         // Newline
         // Handle first press
         if is_key_pressed(KeyCode::Enter) {
