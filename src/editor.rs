@@ -75,18 +75,51 @@ impl Editor {
 
     // Enter a new line
     pub fn new_line(&mut self) {
-        // Get mutable reference to the current line
-        let current_line = &mut self.text[self.cursor_y];
+        if let Some(current_line) = self.text.get_mut(self.cursor_y) {
+            // Split the current line at the cursor position
+            let rest = current_line.split_off(self.cursor_x);
     
-        // Split the current line at the cursor
-        let rest = current_line.split_off(self.cursor_x);
+            // Count leading spaces on current line (indentation)
+            let leading_spaces = current_line.chars().take_while(|c| *c == ' ').count();
     
-        // Move cursor to start of new line
-        self.cursor_y += 1;
-        self.cursor_x = 0;
+            // Check characters around the cursor
+            let before = if self.cursor_x > 0 {
+                current_line.chars().nth(self.cursor_x - 1)
+            } else {
+                None
+            };
+            let after = rest.chars().next();
     
-        // Insert a new line with the rest of the text
-        self.text.insert(self.cursor_y, rest);
+            // Are we between { and } ?
+            let between_braces = before == Some('{') && after == Some('}');
+    
+            // Move cursor to next line
+            self.cursor_y += 1;
+    
+            if between_braces {
+                // One level deeper than the previous indentation
+                let inner_indent = " ".repeat(leading_spaces + TAB_SIZE);
+                let outer_indent = " ".repeat(leading_spaces);
+    
+                // Insert the new indented empty line
+                self.text.insert(self.cursor_y, inner_indent.clone());
+                // Insert a line below it with the closing brace and preserved outer indent
+                self.text.insert(self.cursor_y + 1, format!("{}{}", outer_indent, rest));
+    
+                // Place cursor at the new indented position
+                self.cursor_x = leading_spaces + TAB_SIZE;
+            } else {
+                // Check if line ends with '{' → increase indent
+                let mut new_indent = leading_spaces;
+                if before == Some('{') {
+                    new_indent += TAB_SIZE;
+                }
+    
+                let indent = " ".repeat(new_indent);
+                self.text.insert(self.cursor_y, format!("{}{}", indent, rest));
+                self.cursor_x = new_indent;
+            }
+        }
     }
 
     // Check for special character insertions
