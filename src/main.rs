@@ -27,8 +27,9 @@ async fn main() {
     let mut cursor_visible = true;
     let cursor_rate = 0.45; // seconds per blink
 
-    // Font size
+    // Font
     let font_size = 22;
+    let font: Font = load_ttf_font("assets/fonts/Courier Prime.ttf").await.unwrap();
 
     loop {
         clear_background(BLACK);
@@ -99,12 +100,16 @@ async fn main() {
 
         // Render text
         for (i, line) in editor.text.iter().enumerate() {
-            draw_text(
+            draw_text_ex(
                 line.as_str(),
                 15.0,
                 20.0 + i as f32 * font_size as f32,
-                font_size as f32,
-                WHITE,
+                TextParams {
+                    font: Some(&font),
+                    font_size,
+                    color: WHITE,
+                    ..Default::default()
+                },
             );
         }
 
@@ -118,7 +123,7 @@ async fn main() {
         // Render cursor
         if cursor_visible {
             let cursor_x = 10.0
-                + measure_text(&editor.text[editor.cursor_y][..editor.cursor_x], None, font_size, 1.0).width + 5.0;
+                + measure_text(&editor.text[editor.cursor_y][..editor.cursor_x], Some(&font), font_size, 1.0).width + 5.0;
             let cursor_y = 25.0 + editor.cursor_y as f32 * font_size as f32;
             draw_rectangle(cursor_x, cursor_y - font_size as f32, 2.0, font_size as f32, WHITE);
         }
