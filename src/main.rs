@@ -98,11 +98,34 @@ async fn main() {
             editor.move_cursor(KeyCode::Right);
         }
 
-        // Render text
         for (i, line) in editor.text.iter().enumerate() {
+            // Draw line number in gutter
+            draw_text_ex(
+                &format!("{}", i + 1),
+                5.0, // left margin for line numbers
+                20.0 + i as f32 * font_size as f32, // same y as the text
+                TextParams {
+                    font: Some(&font),
+                    font_size,
+                    color: WHITE,
+                    ..Default::default()
+                },
+            );
+
+            // Text/line seperator
+            draw_line(
+            60.0,                                // x1: gutter separator
+            0.0,  // y1: top of line
+            60.0,                                // x2: same x for vertical line
+            (i as f32 + 1.0) * font_size as f32, // y2: bottom of line
+            1.0,                                 // stroke width
+            WHITE                                 // color
+        );
+        
+            // Draw the actual text
             draw_text_ex(
                 line.as_str(),
-                15.0,
+                65.0,                       // Shift text to the right to leave space for numbers
                 20.0 + i as f32 * font_size as f32,
                 TextParams {
                     font: Some(&font),
@@ -122,13 +145,12 @@ async fn main() {
         
         // Render cursor
         if cursor_visible {
-            let cursor_x = 10.0
+            let cursor_x = 65.0
                 + measure_text(&editor.text[editor.cursor_y][..editor.cursor_x], Some(&font), font_size, 1.0).width + 5.0;
             let cursor_y = 25.0 + editor.cursor_y as f32 * font_size as f32;
-            draw_rectangle(cursor_x, cursor_y - font_size as f32, 2.0, font_size as f32, WHITE);
+            draw_rectangle(cursor_x, cursor_y - font_size as f32, font_size as f32 / 1.5, font_size as f32, WHITE);
         }
 
         next_frame().await;
-
     }
 }

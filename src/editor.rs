@@ -2,7 +2,6 @@ use macroquad::input::KeyCode;
 
 // Basic editor struct
 pub struct Editor{
-    pub scope: i32,        // Current scope
     pub text: Vec<String>, // File text string
     pub cursor_x: usize,   // Current cursor position x
     pub cursor_y: usize    // Current cursor position y
@@ -15,7 +14,6 @@ impl Editor {
     // Constructor
     pub fn new() -> Self {
         Self {
-            scope: 0,
             text: vec![String::new()],
             cursor_x: 0,
             cursor_y: 0
@@ -25,7 +23,7 @@ impl Editor {
     // Insert a character via keypress
     pub fn insert_char(&mut self, c: char) {
         if let Some(line) = self.text.get_mut(self.cursor_y) {
-            let special_char = Self::special_char_insertion(c, line, &mut self.cursor_x, &mut self.scope);
+            let special_char = Self::special_char_insertion(c, line, &mut self.cursor_x);
             
             if !special_char {
                 line.insert(self.cursor_x, c);
@@ -68,12 +66,10 @@ impl Editor {
     // Check for special character insertions
     // like when pressing '(' it creates another ')'
     // or the tab -> <3 spaces>
-    pub fn special_char_insertion(c: char, line: &mut String, cursor_x: &mut usize, scope: &mut i32) -> bool {
+    pub fn special_char_insertion(c: char, line: &mut String, cursor_x: &mut usize) -> bool {
         if c == '(' {
             line.insert(*cursor_x, c);
             line.insert(*(cursor_x) + 1, ')');
-
-            *cursor_x += 1;
 
             return true;
         }
@@ -90,8 +86,6 @@ impl Editor {
         if c == '{' {
             line.insert(*cursor_x, c);
             line.insert(*(cursor_x) + 1, '}');
-
-            *scope += 1;
 
             *cursor_x += 1;
 
@@ -115,14 +109,6 @@ impl Editor {
 
             return true;
         }
-
-        // Reduce the scope when terminating a block
-        if c == '}' {
-            line.insert(*cursor_x, c);
-            *scope = (*scope - 1).max(0);
-            return true;
-        }
-        
 
         false
     }
