@@ -4,11 +4,11 @@ use std::time::Instant;      // Timers for enter and backspace when is_key_down(
 mod editor;
 use editor::Editor; // Import the struct
 
-// TODO: Add basic highlighting
 // TODO: Add file handling system
 // TODO: Add console system for goto_line, save_file, new_file, goto_dir etc commands
 // TODO: Add palletes!
 // TODO: Add instant cursor movement with Ctrl
+// TODO: Add basic highlighting
 
 #[macroquad::main("whiskey")]
 async fn main() {
