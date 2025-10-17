@@ -15,6 +15,10 @@ use editor::Editor; // Import the struct
 async fn main() {
     set_fullscreen(true); // Window is now fullscreen
 
+    // Camera positions, to move with the cursor
+    let mut camera_x: f32 = 0.0;
+    let mut camera_y: f32 = 0.0;
+
     let mut editor = Editor::new();
 
     // Enter press timer
@@ -33,6 +37,10 @@ async fn main() {
     let mut cursor_timer = Instant::now();
     let mut cursor_visible = true;
     let cursor_rate = 0.45; // seconds per blink
+
+    // Cursor movement
+    let mut cursor_movement_timer = Instant::now();
+    let mut cursor_movement_held = false;
 
     // Font
     let font_size = 22;
@@ -91,18 +99,56 @@ async fn main() {
             backspace_held = false;
         }
         
-        // Handle the cursor movement
+        // Cursor movement
+        // Handle first press
         if is_key_pressed(KeyCode::Up) {
             editor.move_cursor(KeyCode::Up);
+            cursor_movement_timer = Instant::now();
+            cursor_movement_held = true;
         }
         if is_key_pressed(KeyCode::Down) {
             editor.move_cursor(KeyCode::Down);
+            cursor_movement_timer = Instant::now();
+            cursor_movement_held = true;
         }
         if is_key_pressed(KeyCode::Left) {
             editor.move_cursor(KeyCode::Left);
+            cursor_movement_timer = Instant::now();
+            cursor_movement_held = true;
         }
         if is_key_pressed(KeyCode::Right) {
             editor.move_cursor(KeyCode::Right);
+            cursor_movement_timer = Instant::now();
+            cursor_movement_held = true;
+        }
+
+        // Handle held key
+        if is_key_down(KeyCode::Up) {
+            let elapsed = cursor_movement_timer.elapsed().as_secs_f32();
+            if cursor_movement_held && elapsed > repeat_delay {
+                editor.move_cursor(KeyCode::Up);
+                cursor_movement_timer = Instant::now() - std::time::Duration::from_secs_f32(repeat_rate);
+            }
+        } else if is_key_down(KeyCode::Down) {
+            let elapsed = cursor_movement_timer.elapsed().as_secs_f32();
+            if cursor_movement_held && elapsed > repeat_delay {
+                editor.move_cursor(KeyCode::Down);
+                cursor_movement_timer = Instant::now() - std::time::Duration::from_secs_f32(repeat_rate);
+            }
+        } else if is_key_down(KeyCode::Left) {
+            let elapsed = cursor_movement_timer.elapsed().as_secs_f32();
+            if cursor_movement_held && elapsed > repeat_delay {
+                editor.move_cursor(KeyCode::Left);
+                cursor_movement_timer = Instant::now() - std::time::Duration::from_secs_f32(repeat_rate);
+            }
+        } else if is_key_down(KeyCode::Right) {
+            let elapsed = cursor_movement_timer.elapsed().as_secs_f32();
+            if cursor_movement_held && elapsed > repeat_delay {
+                editor.move_cursor(KeyCode::Right);
+                cursor_movement_timer = Instant::now() - std::time::Duration::from_secs_f32(repeat_rate);
+            }
+        } else {
+            cursor_movement_held = false;
         }
 
         for (i, line) in editor.text.iter().enumerate() {
@@ -152,10 +198,10 @@ async fn main() {
         
         // Render cursor
         if cursor_visible {
-            let cursor_x = 65.0
+            let cursor_x = 60.0
                 + measure_text(&editor.text[editor.cursor_y][..editor.cursor_x], Some(&font), font_size, 1.0).width + 5.0;
             let cursor_y = 25.0 + editor.cursor_y as f32 * font_size as f32;
-            draw_rectangle(cursor_x, cursor_y - font_size as f32, font_size as f32 / 6.0, font_size as f32, WHITE);
+            draw_rectangle(cursor_x, cursor_y - font_size as f32, font_size as f32 / 8.0, font_size as f32, WHITE);
         }
 
         next_frame().await;
