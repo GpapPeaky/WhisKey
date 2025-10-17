@@ -19,6 +19,9 @@ async fn main() {
     let mut camera_x: f32 = 0.0;
     let mut camera_y: f32 = 0.0;
 
+    // Pixels from edge before we start scrolling
+    let scroll_margin = 100.0;
+
     let mut editor = Editor::new();
 
     // Enter press timer
@@ -30,8 +33,8 @@ async fn main() {
     let mut backspace_held = false;
     
     // Timer parameters
-    let repeat_delay = 0.2;   // seconds before repeat starts
-    let repeat_rate = 0.05;   // seconds per repeat after that
+    let repeat_delay = 0.15;   // seconds before repeat starts
+    let repeat_rate = 0.05;    // seconds per repeat after that
 
     // Cursor blink
     let mut cursor_timer = Instant::now();
@@ -155,8 +158,8 @@ async fn main() {
             // Draw line number in gutter
             draw_text_ex(
                 &format!("{}", i + 1),
-                5.0, // left margin for line numbers
-                20.0 + i as f32 * font_size as f32, // same y as the text
+                5.0 - camera_x, // left margin for line numbers
+                20.0 + i as f32 * font_size as f32 - camera_y, // same y as the text
                 TextParams {
                     font: Some(&font),
                     font_size,
@@ -170,7 +173,7 @@ async fn main() {
             60.0,                                // x1: gutter separator
             0.0,  // y1: top of line
             60.0,                                // x2: same x for vertical line
-            (i as f32 + 1.0) * font_size as f32, // y2: bottom of line
+            screen_height(), // y2: bottom of line
             1.0,                                 // stroke width
             WHITE                                 // color
         );
@@ -178,8 +181,8 @@ async fn main() {
             // Draw the actual text
             draw_text_ex(
                 line.as_str(),
-                65.0,                       // Shift text to the right to leave space for numbers
-                20.0 + i as f32 * font_size as f32,
+                65.0 - camera_x,                       // Shift text to the right to leave space for numbers
+                20.0 + i as f32 * font_size as f32 - camera_y,
                 TextParams {
                     font: Some(&font),
                     font_size,
@@ -201,8 +204,39 @@ async fn main() {
             let cursor_x = 60.0
                 + measure_text(&editor.text[editor.cursor_y][..editor.cursor_x], Some(&font), font_size, 1.0).width + 5.0;
             let cursor_y = 25.0 + editor.cursor_y as f32 * font_size as f32;
-            draw_rectangle(cursor_x, cursor_y - font_size as f32, font_size as f32 / 8.0, font_size as f32, WHITE);
+        
+            draw_rectangle(
+                cursor_x - camera_x,
+                cursor_y - font_size as f32 - camera_y,
+                font_size as f32 / 8.0,
+                font_size as f32,
+                WHITE,
+            );
         }
+
+        // Get screen size
+        let (screen_w, screen_h) = (screen_width(), screen_height());
+        
+        // Calculate cursor position in world space (not offset)
+        let cursor_x = 60.0
+            + measure_text(&editor.text[editor.cursor_y][..editor.cursor_x], Some(&font), font_size, 1.0).width
+            + 5.0;
+        let cursor_y = 25.0 + editor.cursor_y as f32 * font_size as f32;
+        
+        // Horizontal scrolling
+        if cursor_x - camera_x > screen_w - scroll_margin {
+            camera_x = cursor_x - (screen_w - scroll_margin);
+        } else if cursor_x - camera_x < scroll_margin {
+            camera_x = (cursor_x - scroll_margin).max(0.0);
+        }
+        
+        // Vertical scrolling
+        if cursor_y - camera_y > screen_h - scroll_margin {
+            camera_y = cursor_y - (screen_h - scroll_margin);
+        } else if cursor_y - camera_y < scroll_margin {
+            camera_y = (cursor_y - scroll_margin).max(0.0);
+        }
+        
 
         next_frame().await;
     }
