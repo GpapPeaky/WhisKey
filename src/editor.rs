@@ -1,8 +1,7 @@
-use macroquad::{input::KeyCode, text};
+use macroquad::{input::KeyCode};
 
 // Basic editor struct
 pub struct Editor{
-    pub scope: i32,        // Current scope
     pub text: Vec<String>, // File text string
     pub cursor_x: usize,   // Current cursor position x
     pub cursor_y: usize    // Current cursor position y
@@ -15,7 +14,6 @@ impl Editor {
     // Constructor
     pub fn new() -> Self {
         Self {
-            scope: 0,
             text: vec![String::new()],
             cursor_x: 0,
             cursor_y: 0
