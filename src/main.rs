@@ -6,11 +6,10 @@ use editor::Editor; // Import the struct
 
 // TODO: Add file handling system
 // TODO: Add basic highlighting
-// TODO: Add more colours!
+// TODO: Add palletes!
 // TODO: Add instant cursor movement with Ctrl
 // TODO: Add timers to all key presses
 // TODO: Add an idle and editing state to the cursor
-
 
 #[macroquad::main("whiskey")]
 async fn main() {
