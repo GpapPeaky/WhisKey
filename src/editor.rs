@@ -175,7 +175,6 @@ impl Editor {
     }
 
     // Tab insertion
-
     pub fn insert_tab(&mut self) {
         if let Some(line) = self.text.get_mut(self.cursor_y) {
             for i in 0..TAB_SIZE {
@@ -219,5 +218,10 @@ impl Editor {
             }
             _ => {}
         }
+    }
+
+    // Control character handling
+    pub fn control_key_handle(&mut self, key: KeyCode){
+        
     }
 }
