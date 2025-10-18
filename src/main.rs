@@ -4,6 +4,9 @@ use std::time::Instant;      // Timers for enter and backspace when is_key_down(
 mod editor;
 use editor::Editor; // Import the struct
 
+mod console;
+use console::Console;
+
 // TODO: Add file handling system
 // TODO: Add basic highlighting
 // TODO: Add palletes!
@@ -15,7 +18,11 @@ use editor::Editor; // Import the struct
 async fn main() {
     set_fullscreen(true); // Window is now fullscreen
 
+    let mut console = Console::new();
     let mut editor = Editor::new();
+    
+    // Top bar for info display
+    let top_bar_margin:f32 = 30.0;
 
     // Enter press timer
     let mut enter_timer = Instant::now();
@@ -90,6 +97,11 @@ async fn main() {
         } else {
             backspace_held = false;
         }
+
+        // Switch to console mode with CTRL + `
+        if is_key_down(KeyCode::LeftControl) && is_key_pressed(KeyCode::GraveAccent) {
+            console.console_mode_switch();
+        }
         
         // Handle the cursor movement
         if is_key_pressed(KeyCode::Up) {
@@ -110,7 +122,7 @@ async fn main() {
             draw_text_ex(
                 &format!("{}", i + 1),
                 5.0, // left margin for line numbers
-                20.0 + i as f32 * font_size as f32, // same y as the text
+                top_bar_margin + 20.0 + i as f32 * font_size as f32, // same y as the text
                 TextParams {
                     font: Some(&font),
                     font_size,
@@ -121,19 +133,19 @@ async fn main() {
 
             // Text/line seperator
             draw_line(
-            60.0,                                // x1: gutter separator
-            0.0,  // y1: top of line
-            60.0,                                // x2: same x for vertical line
-            (i as f32 + 1.0) * font_size as f32, // y2: bottom of line
-            1.0,                                 // stroke width
-            WHITE                                 // color
+            60.0,                                                 // x1: gutter separator
+            top_bar_margin,                                       // y1: top of line
+            60.0,                                                 // x2: same x for vertical line
+            screen_height(),                                      // y2: bottom of line
+            1.0,
+            WHITE
         );
         
             // Draw the actual text
             draw_text_ex(
                 line.as_str(),
                 65.0,                       // Shift text to the right to leave space for numbers
-                20.0 + i as f32 * font_size as f32,
+                top_bar_margin + 20.0 + i as f32 * font_size as f32,
                 TextParams {
                     font: Some(&font),
                     font_size,
@@ -141,6 +153,9 @@ async fn main() {
                     ..Default::default()
                 },
             );
+
+            // Top bar line, display info on top of it 
+            draw_line(0.0, top_bar_margin, screen_width(), top_bar_margin, 1.0, WHITE);
         }
 
         // Cursor blink timer
@@ -154,9 +169,11 @@ async fn main() {
         if cursor_visible {
             let cursor_x = 65.0
                 + measure_text(&editor.text[editor.cursor_y][..editor.cursor_x], Some(&font), font_size, 1.0).width + 5.0;
-            let cursor_y = 25.0 + editor.cursor_y as f32 * font_size as f32;
+            let cursor_y = top_bar_margin + 25.0 + editor.cursor_y as f32 * font_size as f32;
             draw_rectangle(cursor_x, cursor_y - font_size as f32, font_size as f32 / 6.0, font_size as f32, WHITE);
         }
+
+        console.render_console();
 
         next_frame().await;
     }

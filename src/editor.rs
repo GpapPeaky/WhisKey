@@ -1,7 +1,9 @@
 use macroquad::{input::KeyCode};
 
-// Basic editor struct
-pub struct Editor{
+// Basic editor struct.
+// Handles cursor positions
+// and text editing
+pub struct Editor {
     pub text: Vec<String>, // File text string
     pub cursor_x: usize,   // Current cursor position x
     pub cursor_y: usize    // Current cursor position y
@@ -11,7 +13,7 @@ const TAB_SIZE: usize = 4;
 
 impl Editor {
     
-    // Constructor
+    // Editor constructor
     pub fn new() -> Self {
         Self {
             text: vec![String::new()],
