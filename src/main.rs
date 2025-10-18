@@ -178,6 +178,10 @@ async fn main() {
             } else {
                 backspace_held = false;
             }
+            
+            if is_key_pressed(KeyCode::Enter) { 
+                console.execute();
+            }
         }
 
         // Switch to console mode with CTRL + `

@@ -56,6 +56,7 @@ impl ConsoleCommand {
 
     // Exit the process, kills the editor
     pub fn exit() {
+        print!("Whiskey: Force exit\n");
         std::process::exit(COMMAND_INDECES::CommandExit as i32);
     }
 

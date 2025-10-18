@@ -76,7 +76,7 @@ impl Console {
         let index = self.read_command();
 
         if index == COMMAND_INDECES::CommandExit as i32 {
-            self.command.exit();
+            ConsoleCommand::exit();
         }
 
     }
