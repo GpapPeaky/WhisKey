@@ -225,4 +225,5 @@ impl Editor {
     pub fn control_key_handle(&mut self, key: KeyCode){
         
     }
+
 }

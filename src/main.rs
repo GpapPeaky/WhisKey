@@ -52,7 +52,7 @@ async fn main() {
     loop {
         clear_background(BLACK);
 
-        if console.console_mode {
+        if !console.console_mode { // Text mode 
             // Input handle
             if let Some(c) = get_char_pressed() {
                 if !c.is_control() { // If it is a control character, do nothing
@@ -101,11 +101,6 @@ async fn main() {
                 }
             } else {
                 backspace_held = false;
-            }
-
-            // Switch to console mode with CTRL + `
-            if is_key_down(KeyCode::LeftControl) && is_key_pressed(KeyCode::GraveAccent) {
-                console.console_mode_switch();
             }
             
             // Handle the cursor movement
@@ -159,7 +154,35 @@ async fn main() {
                 cursor_movement_held = false;
             }
         } else { // Console mode
+            if let Some(c) = get_char_pressed() {
+                if !c.is_control() { // If it is a control character, do nothing
+                    console.insert_char(c);
+                }
+            }
+
+            // Backspace
+            // Handle first press
+            if is_key_pressed(KeyCode::Backspace) {
+                console.backspace();
+                backspace_timer = Instant::now();
+                backspace_held = true;
+            }
             
+            // Handle held key
+            if is_key_down(KeyCode::Backspace) {
+                let elapsed = backspace_timer.elapsed().as_secs_f32();
+                if backspace_held && elapsed > repeat_delay {
+                    console.backspace();
+                    backspace_timer = Instant::now() - std::time::Duration::from_secs_f32(repeat_rate);
+                }
+            } else {
+                backspace_held = false;
+            }
+        }
+
+        // Switch to console mode with CTRL + `
+        if is_key_down(KeyCode::LeftControl) && is_key_pressed(KeyCode::GraveAccent) {
+            console.console_mode_switch();
         }
 
         for (i, line) in editor.text.iter().enumerate() {
@@ -210,16 +233,36 @@ async fn main() {
             cursor_timer = Instant::now();    // reset timer
         }
         
+        console.render_console();
+
         // Render cursor
-        if cursor_visible {
+        if cursor_visible && !console.console_mode { // Text mode
             let cursor_x = 60.0
-                + measure_text(&editor.text[editor.cursor_y][..editor.cursor_x], Some(&font), font_size, 1.0).width + 5.0;
-            let cursor_y = top_bar_margin + 25.0 + editor.cursor_y as f32 * font_size as f32;
+                + measure_text(&editor.text[editor.cursor_y][..editor.cursor_x], Some(&font), font_size, 1.0).width +
+                 5.0;
+
+            let cursor_y = top_bar_margin + 
+                25.0 +                          // File lines margin 
+                editor.cursor_y as f32 *
+                font_size as f32;
+
+            draw_rectangle(cursor_x, cursor_y - font_size as f32, font_size as f32 / 6.0, font_size as f32, WHITE);
+        } else if cursor_visible {              // Console mode
+            let cursor_x = 5.0
+                + measure_text(&editor.text[editor.cursor_y][..editor.cursor_x], Some(&font), font_size, 1.0).width + 
+                5.0; // Padding
+
+            let cursor_y = 
+                screen_height() - 
+                console::CONSOLE_HEIGHT + 
+                font_size as f32 + 
+                5.0;                    // Padding
+
             draw_rectangle(cursor_x, cursor_y - font_size as f32, font_size as f32 / 6.0, font_size as f32, WHITE);
         }
 
-        console.render_console();
-
         next_frame().await;
     }
+
 }
+
