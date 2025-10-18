@@ -7,31 +7,37 @@ use macroquad::prelude::*;
 // 'fname': Typing the name of a file, switches over to it
 // if found, else it asks to create it
 //
-// '~sd': Switch cwd -> call upon windows to open the folder panel
+// '?sd': Switch cwd -> call upon windows to open the folder panel
 //
-// '~sf': Save the currently open file
+// '?sf': Save the currently open file
 //
-// '~df fname': Delete a file with name 'fname'
+// '?df fname': Delete a file with name 'fname'
 //
-// '~e': Exit the editor, terminate the program
+// '?e': Exit the editor, terminate the program
 //
-// '~p pname': Pallete switch to a pallete with name 'pname'
+// '?p pname': Pallete switch to a pallete with name 'pname'
+//
+// '?l lnum': Go to line lnum in the current file
 pub struct Console {
     pub console_mode: bool, // Switch in and out of the console
     pub command: String     // Commands string
 }
 
 // Command name vector
-// we will check here when a '`'
+// we will check here when for a '?' character
 // character is found in an inputed line
 // (when in console mode)
-const command_vector: [&str ; 5] = [
+const command_vector: [&str ; 6] = [
     "sd",
     "sf",
     "df",
     "e",
-    "p"
+    "p",
+    "l"
 ];
+
+// Console height
+const CONSOLE_HEIGHT: f32 = 150.0;
 
 impl Console {
 
@@ -46,6 +52,11 @@ impl Console {
     // Switch in and out of the console
     pub fn console_mode_switch(&mut self) {
         self.console_mode = !self.console_mode;
+    }
+
+    // take input in the console
+    pub fn console_input(&mut self) {
+
     }
 
     // Render the console promt

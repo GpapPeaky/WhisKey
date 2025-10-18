@@ -7,8 +7,9 @@ use editor::Editor; // Import the struct
 mod console;
 use console::Console;
 
-// TODO: Add file handling system
+// TODO: Add scrollable screen 
 // TODO: Add console system for goto_line, save_file, new_file, goto_dir etc commands
+// TODO: Add file handling system
 // TODO: Add palletes!
 // TODO: Add instant cursor movement with Ctrl
 // TODO: Add basic highlighting
@@ -51,110 +52,114 @@ async fn main() {
     loop {
         clear_background(BLACK);
 
-        // Input handle
-        if let Some(c) = get_char_pressed() {
-            if !c.is_control() { // If it is a control character, do nothing
-                editor.insert_char(c);
+        if console.console_mode {
+            // Input handle
+            if let Some(c) = get_char_pressed() {
+                if !c.is_control() { // If it is a control character, do nothing
+                    editor.insert_char(c);
+                }
             }
-        }
 
-        // Tab key
-        if is_key_pressed(KeyCode::Tab) {
-            editor.insert_tab();
-        }
+            // Tab key
+            if is_key_pressed(KeyCode::Tab) {
+                editor.insert_tab();
+            }
 
-        // Newline
-        // Handle first press
-        if is_key_pressed(KeyCode::Enter) {
-            editor.new_line();
-            enter_timer = Instant::now();
-            enter_held = true;
-        }
-        
-        // Handle held key
-        if is_key_down(KeyCode::Enter) {
-            let elapsed = enter_timer.elapsed().as_secs_f32();
-            if enter_held && elapsed > repeat_delay {
+            // Newline
+            // Handle first press
+            if is_key_pressed(KeyCode::Enter) {
                 editor.new_line();
-                enter_timer = Instant::now() - std::time::Duration::from_secs_f32(repeat_rate);
+                enter_timer = Instant::now();
+                enter_held = true;
             }
-        } else {
-            enter_held = false;
-        }
-        
-        // Backspace
-        // Handle first press
-        if is_key_pressed(KeyCode::Backspace) {
-            editor.backspace();
-            backspace_timer = Instant::now();
-            backspace_held = true;
-        }
-        
-        // Handle held key
-        if is_key_down(KeyCode::Backspace) {
-            let elapsed = backspace_timer.elapsed().as_secs_f32();
-            if backspace_held && elapsed > repeat_delay {
+            
+            // Handle held key
+            if is_key_down(KeyCode::Enter) {
+                let elapsed = enter_timer.elapsed().as_secs_f32();
+                if enter_held && elapsed > repeat_delay {
+                    editor.new_line();
+                    enter_timer = Instant::now() - std::time::Duration::from_secs_f32(repeat_rate);
+                }
+            } else {
+                enter_held = false;
+            }
+            
+            // Backspace
+            // Handle first press
+            if is_key_pressed(KeyCode::Backspace) {
                 editor.backspace();
-                backspace_timer = Instant::now() - std::time::Duration::from_secs_f32(repeat_rate);
+                backspace_timer = Instant::now();
+                backspace_held = true;
             }
-        } else {
-            backspace_held = false;
-        }
+            
+            // Handle held key
+            if is_key_down(KeyCode::Backspace) {
+                let elapsed = backspace_timer.elapsed().as_secs_f32();
+                if backspace_held && elapsed > repeat_delay {
+                    editor.backspace();
+                    backspace_timer = Instant::now() - std::time::Duration::from_secs_f32(repeat_rate);
+                }
+            } else {
+                backspace_held = false;
+            }
 
-        // Switch to console mode with CTRL + `
-        if is_key_down(KeyCode::LeftControl) && is_key_pressed(KeyCode::GraveAccent) {
-            console.console_mode_switch();
-        }
-        
-        // Handle the cursor movement
-        if is_key_pressed(KeyCode::Up) {
-            editor.move_cursor(KeyCode::Up);
-            cursor_movement_timer = Instant::now();
-            cursor_movement_held = true;
-        }
-        if is_key_pressed(KeyCode::Down) {
-            editor.move_cursor(KeyCode::Down);
-            cursor_movement_timer = Instant::now();
-            cursor_movement_held = true;
-        }
-        if is_key_pressed(KeyCode::Left) {
-            editor.move_cursor(KeyCode::Left);
-            cursor_movement_timer = Instant::now();
-            cursor_movement_held = true;
-        }
-        if is_key_pressed(KeyCode::Right) {
-            editor.move_cursor(KeyCode::Right);
-            cursor_movement_timer = Instant::now();
-            cursor_movement_held = true;
-        }
-
-        // Handle held key
-        if is_key_down(KeyCode::Up) {
-            let elapsed = cursor_movement_timer.elapsed().as_secs_f32();
-            if cursor_movement_held && elapsed > repeat_delay {
+            // Switch to console mode with CTRL + `
+            if is_key_down(KeyCode::LeftControl) && is_key_pressed(KeyCode::GraveAccent) {
+                console.console_mode_switch();
+            }
+            
+            // Handle the cursor movement
+            if is_key_pressed(KeyCode::Up) {
                 editor.move_cursor(KeyCode::Up);
-                cursor_movement_timer = Instant::now() - std::time::Duration::from_secs_f32(repeat_rate);
+                cursor_movement_timer = Instant::now();
+                cursor_movement_held = true;
             }
-        } else if is_key_down(KeyCode::Down) {
-            let elapsed = cursor_movement_timer.elapsed().as_secs_f32();
-            if cursor_movement_held && elapsed > repeat_delay {
+            if is_key_pressed(KeyCode::Down) {
                 editor.move_cursor(KeyCode::Down);
-                cursor_movement_timer = Instant::now() - std::time::Duration::from_secs_f32(repeat_rate);
+                cursor_movement_timer = Instant::now();
+                cursor_movement_held = true;
             }
-        } else if is_key_down(KeyCode::Left) {
-            let elapsed = cursor_movement_timer.elapsed().as_secs_f32();
-            if cursor_movement_held && elapsed > repeat_delay {
+            if is_key_pressed(KeyCode::Left) {
                 editor.move_cursor(KeyCode::Left);
-                cursor_movement_timer = Instant::now() - std::time::Duration::from_secs_f32(repeat_rate);
+                cursor_movement_timer = Instant::now();
+                cursor_movement_held = true;
             }
-        } else if is_key_down(KeyCode::Right) {
-            let elapsed = cursor_movement_timer.elapsed().as_secs_f32();
-            if cursor_movement_held && elapsed > repeat_delay {
+            if is_key_pressed(KeyCode::Right) {
                 editor.move_cursor(KeyCode::Right);
-                cursor_movement_timer = Instant::now() - std::time::Duration::from_secs_f32(repeat_rate);
+                cursor_movement_timer = Instant::now();
+                cursor_movement_held = true;
             }
-        } else {
-            cursor_movement_held = false;
+
+            // Handle held key
+            if is_key_down(KeyCode::Up) {
+                let elapsed = cursor_movement_timer.elapsed().as_secs_f32();
+                if cursor_movement_held && elapsed > repeat_delay {
+                    editor.move_cursor(KeyCode::Up);
+                    cursor_movement_timer = Instant::now() - std::time::Duration::from_secs_f32(repeat_rate);
+                }
+            } else if is_key_down(KeyCode::Down) {
+                let elapsed = cursor_movement_timer.elapsed().as_secs_f32();
+                if cursor_movement_held && elapsed > repeat_delay {
+                    editor.move_cursor(KeyCode::Down);
+                    cursor_movement_timer = Instant::now() - std::time::Duration::from_secs_f32(repeat_rate);
+                }
+            } else if is_key_down(KeyCode::Left) {
+                let elapsed = cursor_movement_timer.elapsed().as_secs_f32();
+                if cursor_movement_held && elapsed > repeat_delay {
+                    editor.move_cursor(KeyCode::Left);
+                    cursor_movement_timer = Instant::now() - std::time::Duration::from_secs_f32(repeat_rate);
+                }
+            } else if is_key_down(KeyCode::Right) {
+                let elapsed = cursor_movement_timer.elapsed().as_secs_f32();
+                if cursor_movement_held && elapsed > repeat_delay {
+                    editor.move_cursor(KeyCode::Right);
+                    cursor_movement_timer = Instant::now() - std::time::Duration::from_secs_f32(repeat_rate);
+                }
+            } else {
+                cursor_movement_held = false;
+            }
+        } else { // Console mode
+            
         }
 
         for (i, line) in editor.text.iter().enumerate() {

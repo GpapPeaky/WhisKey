@@ -9,6 +9,7 @@ pub struct Editor {
     pub cursor_y: usize    // Current cursor position y
 }
 
+// Tab size
 const TAB_SIZE: usize = 4;
 
 impl Editor {
